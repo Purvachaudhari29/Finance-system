@@ -1,0 +1,19 @@
+from sqlalchemy.orm import Session
+from sqlalchemy import func
+from app.models.transaction import Transaction
+
+def get_summary(db: Session):
+    income = db.query(func.sum(Transaction.amount)).filter(Transaction.type == "income").scalar() or 0
+    expense = db.query(func.sum(Transaction.amount)).filter(Transaction.type == "expense").scalar() or 0
+
+    return {
+        "total_income": income,
+        "total_expense": expense,
+        "balance": income - expense
+    }
+
+def category_breakdown(db: Session):
+    data = db.query(Transaction.category, func.sum(Transaction.amount))\
+        .group_by(Transaction.category).all()
+
+    return {category: amount for category, amount in data}
